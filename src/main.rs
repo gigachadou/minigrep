@@ -6,9 +6,7 @@ use std::process;
 use minigrep::{search, search_case_insensitive};
 
 fn main() {
-    let ar_vec: Vec<String> = env::args().collect();
-    
-    let config = Configs::build(&ar_vec).unwrap_or_else(|err| {
+    let config = Configs::build(env::args()).unwrap_or_else(|err| {
         eprintln!("Error while parsing: {err}");
         process::exit(1);
     });
@@ -28,14 +26,22 @@ struct Configs{
 }
 
 impl Configs {
-    fn build(itr: &[String]) -> Result<Configs, &'static str> {
-        if itr.len() < 3 {
-            return Err("Not enough Arguments");
-        }
+    fn build(mut args_i: impl Iterator<Item = String>) -> Result<Configs, &'static str> {
+        args_i.next();
+
+        let query = match args_i.next() {
+            Some(arg) => arg,
+            None => return  Err("Did not get the query")
+        };
+
+        let file_path = match args_i.next() {
+            Some(arg) => arg,
+            None => return Err("Did not get the path to search")
+        };
 
         let ignore_case = env::var("IGNORE_CASE").is_ok();
 
-        Ok(Configs{ query: itr[1].clone(), file_path: itr[2].clone(), ignore_case: ignore_case})
+        Ok(Configs{ query, file_path, ignore_case})
     }
 }
 
